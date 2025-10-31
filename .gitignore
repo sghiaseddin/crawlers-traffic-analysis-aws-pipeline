@@ -1,0 +1,42 @@
+# Environment files
+.env
+
+# DevOps
+.devops
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+
+# Logs and reports
+*.log
+logs/
+reports/
+
+# AWS & deployment artifacts
+*.zip
+*.tar.gz
+build/
+dist/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Keys and secrets
+keys/
+*.pem
+*.key
+
+# Docker
+*.env.docker
+docker-compose.override.yml
+
+# Jupyter or temporary notebooks
+*.ipynb_checkpoints/
