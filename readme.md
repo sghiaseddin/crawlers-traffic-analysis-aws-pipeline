@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.0.1
+## Version 0.1.0
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -107,7 +107,7 @@ Example cumulative per-page activity by bot:
 deploy/
   deploy_llm_log_pipeline.sh     # Automated deployment script
 src/
-  lambda_fetch_logs/             # SCP fetcher module and trigger the ETL
+  lambda_fetch_logs_node/        # Node.js app to fetch log files using ssh and trigger the ETL
   glue_etl/                      # Log parser and CSV generator
   data_analysis/                 # Python analytics (CSV aggregation)
   docker_goaccess/               # Docker container running GoAccess HTML generator
@@ -141,7 +141,12 @@ README.md                        # Documentation (this file)
 This is group project for Data Engineering course by Szabó Ildikó Borbásné and Zoltán Balogh, at Corvinus University of Budapest, Autumn 2025
 
 ---
+## Changelog
 
+### v0.1.0
+- Created: lambda function to fetch logs using ssh connection, in node.js
+
+---
 ## License
 
 This project is released under the **MIT License**.

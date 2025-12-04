@@ -40,3 +40,6 @@ docker-compose.override.yml
 
 # Jupyter or temporary notebooks
 *.ipynb_checkpoints/
+
+#node modules
+src/lambda_fetch_logs_node/node_modules
