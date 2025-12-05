@@ -21,9 +21,11 @@
 
 const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
 const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 
 const secretsClient = new SecretsManagerClient({});
 const s3Client = new S3Client({});
+const lambdaClient = new LambdaClient({});
 
 async function getConfig() {
     const secretName = process.env.CONFIG_SECRET_NAME;
@@ -455,6 +457,104 @@ function renderHtml(report, dateStr, s3Uri) {
 </html>`;
 }
 
+function renderLoadingHtml(dateStr) {
+    const safeDate = escapeHtml(dateStr);
+    return `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Generating Report – ${safeDate}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0f172a;
+        color: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .box {
+        background: #020617;
+        border-radius: 0.75rem;
+        padding: 1.5rem 2rem;
+        border: 1px solid #1e293b;
+        max-width: 520px;
+        text-align: center;
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 1.4rem;
+      }
+      p {
+        color: #9ca3af;
+        font-size: 0.95rem;
+      }
+      .spinner {
+        margin: 1rem auto 0.75rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 4px solid #1e293b;
+        border-top-color: #38bdf8;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.85em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Preparing report for ${safeDate}…</h1>
+      <div class="spinner"></div>
+      <p>
+        We&apos;re generating the bot traffic analysis for this date.
+        This usually takes a few seconds.
+      </p>
+      <p>
+        The page will automatically refresh when the report is ready.
+      </p>
+    </div>
+    <script>
+      (function poll() {
+        var url = new URL(window.location.href);
+        url.searchParams.set("force", "1");
+        fetch(url.toString(), { cache: "no-store" })
+          .then(function (resp) {
+            return resp.text().then(function (text) {
+              return { resp: resp, text: text };
+            });
+          })
+          .then(function (result) {
+            var resp = result.resp;
+            var text = result.text || "";
+            // When the full report HTML is ready, it contains the REPORT_DATA embed
+            if (resp.ok && text.indexOf("window.REPORT_DATA") !== -1) {
+              document.open();
+              document.write(text);
+              document.close();
+            } else {
+              setTimeout(poll, 4000);
+            }
+          })
+          .catch(function () {
+            setTimeout(poll, 5000);
+          });
+      })();
+    </script>
+  </body>
+  </html>`;
+}
+
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, "&amp;")
@@ -468,72 +568,46 @@ exports.handler = async (event) => {
     try {
         const cfg = await getConfig();
         const dateStr = getDateFromEvent(event);
+        const qs = event?.queryStringParameters || {};
+        const forceOnly = qs.force === "1";
 
         let reportData;
         let s3Uri;
+
         try {
+            // First attempt: load existing report for this date
             const { data, bucket, key } = await loadReportForDate(cfg, dateStr);
             reportData = data;
             s3Uri = `s3://${bucket}/${key}`;
         } catch (err) {
-            // If report not found for that date, show a friendly page
-            console.error("Error loading report:", err);
-            const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>No Report – ${dateStr}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .box {
-      background: #020617;
-      border-radius: 0.75rem;
-      padding: 1.5rem 2rem;
-      border: 1px solid #1e293b;
-      max-width: 520px;
-    }
-    h1 {
-      margin-top: 0;
-      font-size: 1.4rem;
-    }
-    p {
-      color: #9ca3af;
-      font-size: 0.95rem;
-    }
-    code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.85em;
-    }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h1>No report available for ${escapeHtml(dateStr)}</h1>
-    <p>
-      The bot analysis JSON file for this date was not found in the analysis bucket.
-    </p>
-    <p>
-      Please ensure that the analysis Lambda has generated a report for this date, or try a different <code>?date=YYYY-MM-DD</code> value.
-    </p>
-  </div>
-</body>
-</html>`;
+            console.error("Error loading report on first attempt:", err);
+
+            const analysisLambdaName = cfg["LOG_ANALYSIS_LAMBDA_NAME"];
+
+            // If this is NOT a polling request, try to trigger the analysis Lambda asynchronously
+            if (!forceOnly && analysisLambdaName) {
+                try {
+                    const invokeCmd = new InvokeCommand({
+                        FunctionName: analysisLambdaName,
+                        InvocationType: "Event", // fire-and-forget
+                        Payload: Buffer.from(JSON.stringify({ date: dateStr })),
+                    });
+                    await lambdaClient.send(invokeCmd);
+                } catch (invokeErr) {
+                    console.error("Error triggering analysis Lambda:", invokeErr);
+                }
+            } else if (!analysisLambdaName) {
+                console.error("LOG_ANALYSIS_LAMBDA_NAME not set in config; cannot trigger analysis.");
+            }
+
+            // Always return a loading page here; the client will poll with ?force=1
+            const html = renderLoadingHtml(dateStr);
             return {
                 statusCode: 200,
                 headers: {
-                    "Content-Type": "text/html; charset=utf-8"
+                    "Content-Type": "text/html; charset=utf-8",
                 },
-                body: html
+                body: html,
             };
         }
 
