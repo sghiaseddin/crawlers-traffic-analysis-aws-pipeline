@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.1.0
+## Version 0.1.1
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -143,8 +143,11 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 ---
 ## Changelog
 
+### v0.1.1
+- Improved: fetch function compare log files in external with bucket and copy only new items, except today's log 
+
 ### v0.1.0
-- Created: lambda function to fetch logs using ssh connection, in node.js
+- Created: lambda function to fetch logs using ssh connection, in node.js. source: https://stackoverflow.com/questions/57127454/accessing-and-copying-files-from-sftp-server-using-aws-lambda-nodejs
 
 ---
 ## License

@@ -3,7 +3,7 @@ const os = require("os");
 const path = require("path");
 const { promisify } = require("util");
 const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
-const { S3Client, GetObjectCommand, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3");
 const SFTPClient = require("ssh2-sftp-client");
 
 const chmod = promisify(fs.chmod);
@@ -67,80 +67,123 @@ async function downloadPrivateKey(config) {
     return localPath;
 }
 
-function buildRemoteLogPath(config) {
-    const dayOffset = parseInt(config["LOG_FETCH_DAY_OFFSET"] || "1", 10);
-    const dateFormat = config["LOG_FETCH_DATE_FORMAT"] || "%Y-%m-%d";
-
-    const now = new Date();
-    const targetDate = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000);
-
-    // We only support %Y-%m-%d for now; if you need more formats, we can extend
-    let dateStr;
-    if (dateFormat === "%Y-%m-%d") {
-        const yyyy = targetDate.getUTCFullYear();
-        const mm = String(targetDate.getUTCMonth() + 1).padStart(2, "0");
-        const dd = String(targetDate.getUTCDate()).padStart(2, "0");
-        dateStr = `${yyyy}-${mm}-${dd}`;
-    } else {
-        // cheap fallback: ISO date prefix
-        dateStr = targetDate.toISOString().slice(0, 10);
+function parseTemplateParts(template) {
+    const marker = "{date}";
+    const idx = template.indexOf(marker);
+    if (idx === -1) {
+        throw new Error("LOG_FETCH_REMOTE_LOG_TEMPLATE must contain '{date}'");
     }
+    const prefix = template.slice(0, idx);
+    const suffix = template.slice(idx + marker.length);
+    return { prefix, suffix };
+}
 
-    const template = config["LOG_FETCH_REMOTE_LOG_TEMPLATE"]; // e.g. "access.log-{date}.gz"
+async function getRemoteLogCandidates(config, sftp) {
+    const template = config["LOG_FETCH_REMOTE_LOG_TEMPLATE"];
     if (!template) {
         throw new Error("LOG_FETCH_REMOTE_LOG_TEMPLATE missing in config");
     }
 
-    const filename = template.replace("{date}", dateStr);
+    const remoteDirRaw = config["LOG_FETCH_REMOTE_LOG_DIR"] || "";
+    const maxDays = parseInt(config["LOG_FETCH_MAX_DAYS"] || "30", 10);
 
-    let remoteDir = config["LOG_FETCH_REMOTE_LOG_DIR"] || "";
-    if (remoteDir && !remoteDir.endsWith("/")) {
-        remoteDir += "/";
+    const { prefix, suffix } = parseTemplateParts(template);
+
+    let remoteDir = remoteDirRaw;
+    if (!remoteDir) {
+        remoteDir = ".";
     }
 
-    const remotePath = remoteDir + filename;
+    const now = new Date();
+    const yyyy = now.getUTCFullYear();
+    const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(now.getUTCDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
 
-    // canonical YYYY-MM-DD for S3 partitioning
-    const s3Date = dateStr;
-    return { remotePath, filename, s3Date };
+    const files = await sftp.list(remoteDir);
+
+    const candidates = [];
+
+    for (const file of files) {
+        // ssh2-sftp-client uses type '-' for regular files
+        if (file.type !== "-") {
+            continue;
+        }
+
+        const name = file.name;
+        if (!name.startsWith(prefix) || !name.endsWith(suffix)) {
+            continue;
+        }
+
+        const datePart = name.slice(prefix.length, name.length - suffix.length);
+
+        // Expecting something like YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+            continue;
+        }
+
+        // Skip today's log; it will only be complete at the end of the day
+        if (datePart === todayStr) {
+            continue;
+        }
+
+        const fileDate = new Date(datePart);
+        if (Number.isNaN(fileDate.getTime())) {
+            continue;
+        }
+
+        const ageMs = now.getTime() - fileDate.getTime();
+        const ageDays = ageMs / (24 * 60 * 60 * 1000);
+        if (ageDays < 0 || ageDays > maxDays) {
+            // skip future or too-old files
+            continue;
+        }
+
+        const dirForPath = remoteDirRaw && !remoteDirRaw.endsWith("/")
+            ? `${remoteDirRaw}/`
+            : remoteDirRaw;
+
+        const remotePath = `${dirForPath || ""}${name}`;
+        const s3Date = datePart;
+
+        candidates.push({
+            filename: name,
+            remotePath,
+            s3Date,
+        });
+    }
+
+    return candidates;
 }
 
-async function fetchRemoteLog(config, keyPath, remotePath, localPath) {
-    const host = config["LOG_FETCH_SSH_HOST"];
-    const user = config["LOG_FETCH_SSH_USER"];
-    const port = parseInt(config["LOG_FETCH_SSH_PORT"] || "22", 10);
-
-    if (!host || !user) {
-        throw new Error("LOG_FETCH_SSH_HOST or LOG_FETCH_SSH_USER missing in config");
+async function getExistingS3LogFilenames(config) {
+    const rawBucket = config["LOG_FETCH_RAW_BUCKET"];
+    if (!rawBucket) {
+        throw new Error("LOG_FETCH_RAW_BUCKET missing in config");
     }
 
-    logger.info(`Connecting via SFTP to ${user}@${host}:${port}`);
-    logger.info(`Remote path: ${remotePath}`);
-    logger.info(`Local path: ${localPath}`);
+    const prefix = "raw/";
+    const cmd = new ListObjectsV2Command({
+        Bucket: rawBucket,
+        Prefix: prefix,
+    });
 
-    const sftp = new SFTPClient();
+    const resp = await s3Client.send(cmd);
 
-    try {
-        await sftp.connect({
-            host,
-            port,
-            username: user,
-            privateKey: fs.readFileSync(keyPath),
-            // optional: strict host key checking can be configured here if needed
-        });
-
-        await sftp.fastGet(remotePath, localPath);
-        logger.info("Successfully fetched remote log file via SFTP.");
-    } catch (err) {
-        logger.error("SFTP error:", err);
-        throw err;
-    } finally {
-        try {
-            await sftp.end();
-        } catch (_) {
-            // ignore
+    const existing = new Set();
+    if (resp.Contents) {
+        for (const obj of resp.Contents) {
+            const key = obj.Key;
+            if (!key) continue;
+            const idx = key.lastIndexOf("/");
+            if (idx === -1) continue;
+            const filename = key.slice(idx + 1);
+            if (filename) {
+                existing.add(filename);
+            }
         }
     }
+    return existing;
 }
 
 async function uploadToS3(config, localPath, filename, s3Date) {
@@ -180,22 +223,66 @@ exports.handler = async (event, context) => {
         // 2. Download private key from S3 to /tmp
         const keyPath = await downloadPrivateKey(config);
 
-        // 3. Build remote log path and local temp path
-        const { remotePath, filename, s3Date } = buildRemoteLogPath(config);
-        const localPath = path.join(os.tmpdir(), filename);
+        // 3. Prepare SFTP connection
+        const host = config["LOG_FETCH_SSH_HOST"];
+        const user = config["LOG_FETCH_SSH_USER"];
+        const port = parseInt(config["LOG_FETCH_SSH_PORT"] || "22", 10);
 
-        // 4. Fetch the log file via SFTP
-        await fetchRemoteLog(config, keyPath, remotePath, localPath);
+        if (!host || !user) {
+            throw new Error("LOG_FETCH_SSH_HOST or LOG_FETCH_SSH_USER missing in config");
+        }
 
-        // 5. Upload the log file into the raw logs bucket
-        const result = await uploadToS3(config, localPath, filename, s3Date);
+        const sftp = new SFTPClient();
+        await sftp.connect({
+            host,
+            port,
+            username: user,
+            privateKey: fs.readFileSync(keyPath),
+        });
 
-        logger.info("Log fetch complete:", result);
+        try {
+            // 4. Determine which remote log files we care about (last N days)
+            const candidates = await getRemoteLogCandidates(config, sftp);
+            logger.info(`Found ${candidates.length} candidate remote log files`);
 
-        return {
-            statusCode: 200,
-            body: JSON.stringify(result),
-        };
+            // 5. Determine which log files already exist in S3
+            const existing = await getExistingS3LogFilenames(config);
+            logger.info(`Found ${existing.size} existing log files in S3`);
+
+            const synced = [];
+
+            for (const { filename, remotePath, s3Date } of candidates) {
+                if (existing.has(filename)) {
+                    logger.info(`Skipping ${filename}, already present in S3`);
+                    continue;
+                }
+
+                const localPath = path.join(os.tmpdir(), filename);
+                logger.info(`Fetching missing log ${filename} from ${remotePath} to ${localPath}`);
+
+                await sftp.fastGet(remotePath, localPath);
+
+                const result = await uploadToS3(config, localPath, filename, s3Date);
+                synced.push(result);
+            }
+
+            logger.info(`Sync complete, ${synced.length} new files uploaded`);
+
+            return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    synced,
+                    totalCandidates: candidates.length,
+                    alreadyPresent: candidates.length - synced.length,
+                }),
+            };
+        } finally {
+            try {
+                await sftp.end();
+            } catch (_) {
+                // ignore
+            }
+        }
     } catch (err) {
         logger.error("Lambda failed:", err);
         return {
