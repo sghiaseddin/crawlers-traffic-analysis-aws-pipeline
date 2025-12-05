@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.2.0
+## Version 0.2.1
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -142,6 +142,9 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+
+### v0.2.1
+- Edited: ETL lambda function to output aggregated .csv and .log file too
 
 ### v0.2.0
 - Created: ETL lambda function to prepare csv from raw .gz log
