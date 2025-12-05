@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.1.1
+## Version 0.2.0
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -142,6 +142,11 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+
+### v0.2.0
+- Created: ETL lambda function to prepare csv from raw .gz log
+- Created: Glue Crawler to generate schema on data catalogue
+- Improved: bot_map.json to include more signatures and IP ranges for some LLM bot crawlers 
 
 ### v0.1.1
 - Improved: fetch function compare log files in external with bucket and copy only new items, except today's log 

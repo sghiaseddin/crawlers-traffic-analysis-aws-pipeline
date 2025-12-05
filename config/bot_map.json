@@ -1,3 +1,119 @@
 {
-  "GPTBot": "gptbot|OpenAI-ChatGPT|ChatGPT-User"
+  "GPTBot": {
+    "patterns": [
+      "GPTBot",
+      "ChatGPT-User",
+      "ChatGPT-User/1.0",
+      "OpenAI-HTTP",
+      "OpenAI"
+    ],
+    "ip_ranges": [
+      "40.83.0.0/16",
+      "40.122.0.0/16"
+    ],
+    "is_llm": true
+  },
+  "PerplexityBot": {
+    "patterns": [
+      "PerplexityBot",
+      "PerplexityAI",
+      "PPLX-HTTP",
+      "PerplexityCrawler"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "ClaudeBot": {
+    "patterns": [
+      "ClaudeBot",
+      "Claude-Web",
+      "anthropic-ai",
+      "Claude-User",
+      "Claude-Scraper"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "GoogleBot": {
+    "patterns": [
+      "Googlebot",
+      "Googlebot/2.1",
+      "AdsBot-Google",
+      "Mediapartners-Google"
+    ],
+    "ip_ranges": [
+      "64.233.160.0/19",
+      "66.249.64.0/19",
+      "72.14.192.0/18",
+      "203.208.32.0/19",
+      "74.125.0.0/16",
+      "209.85.128.0/17",
+      "66.102.0.0/20",
+      "216.239.32.0/19"
+    ],
+    "is_llm": false
+  },
+  "BingBot": {
+    "patterns": [
+      "bingbot",
+      "BingPreview"
+    ],
+    "ip_ranges": [
+      "13.66.0.0/16",
+      "13.67.0.0/16",
+      "13.68.0.0/16"
+    ],
+    "is_llm": false
+  },
+  "AppleBotExtended": {
+    "patterns": [
+      "Applebot-Extended",
+      "Applebot"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "Bytespider": {
+    "patterns": [
+      "Bytespider",
+      "ByteSpider",
+      "ByteDanceSpider"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "CCBot": {
+    "patterns": [
+      "CCBot",
+      "CommonCrawlBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "MetaExternal": {
+    "patterns": [
+      "meta-externalagent",
+      "meta-externalfetcher",
+      "facebookexternalhit",
+      "facebookbot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "DuckAssistBot": {
+    "patterns": [
+      "DuckAssistBot",
+      "DuckDuckGo-Favicons-Bot"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "Diffbot": {
+    "patterns": [
+      "Diffbot",
+      "DiffbotBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  }
 }
