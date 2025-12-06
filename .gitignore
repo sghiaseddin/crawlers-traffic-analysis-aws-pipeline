@@ -37,6 +37,7 @@ keys/
 # Docker
 *.env.docker
 docker-compose.override.yml
+/build-goaccess
 
 # Jupyter or temporary notebooks
 *.ipynb_checkpoints/

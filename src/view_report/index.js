@@ -457,6 +457,120 @@ function renderHtml(report, dateStr, s3Uri) {
 </html>`;
 }
 
+function renderWelcomeHtml(dateStr) {
+    const safeDate = escapeHtml(dateStr);
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crawlers &amp; Bot Traffic Reports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystem, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .shell {
+      background: #020617;
+      border-radius: 1rem;
+      padding: 2rem 2.5rem;
+      border: 1px solid #1e293b;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.9);
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.7rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #9ca3af;
+      font-size: 0.95rem;
+      margin-top: 0.2rem;
+      margin-bottom: 0.6rem;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 1.4rem;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+    }
+    a.btn-primary {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #020617;
+    }
+    a.btn-primary:hover {
+      background: #0ea5e9;
+      border-color: #0ea5e9;
+      transform: translateY(-1px);
+    }
+    a.btn-outline {
+      background: transparent;
+      border-color: #38bdf8;
+      color: #e5e7eb;
+    }
+    a.btn-outline:hover {
+      background: rgba(56,189,248,0.08);
+      transform: translateY(-1px);
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Crawlers &amp; Bot Traffic Reports</h1>
+    <p>
+      This endpoint lets you explore daily crawler and LLM bot activity on your sites.
+      Reports are generated per day from your aggregated access logs.
+    </p>
+    <p class="hint">
+      We always analyse <strong>yesterday&apos;s</strong> data by default (today&apos;s logs are still being collected).
+    </p>
+    <p>
+      Choose how you&apos;d like to view the report for <strong>${safeDate}</strong>:
+    </p>
+    <div class="buttons">
+      <a class="btn btn-primary" href="?date=${safeDate}">
+        Bot JSON Dashboard
+      </a>
+      <a class="btn btn-outline" href="?date=${safeDate}&view=goaccess">
+        GoAccess HTML Report
+      </a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 function renderLoadingHtml(dateStr) {
     const safeDate = escapeHtml(dateStr);
     return `<!DOCTYPE html>
@@ -537,8 +651,8 @@ function renderLoadingHtml(dateStr) {
           .then(function (result) {
             var resp = result.resp;
             var text = result.text || "";
-            // When the full report HTML is ready, it contains the REPORT_DATA embed
-            if (resp.ok && text.indexOf("window.REPORT_DATA") !== -1) {
+            // If the response is not another loading page, assume the final report (JSON dashboard or GoAccess HTML) is ready
+            if (resp.ok && text.indexOf("Preparing report for ") === -1) {
               document.open();
               document.write(text);
               document.close();
@@ -555,6 +669,25 @@ function renderLoadingHtml(dateStr) {
   </html>`;
 }
 
+async function loadGoaccessHtmlForDate(config, dateStr) {
+    const outputBucket = config["LOG_OUTPUT_BUCKET"];
+    let prefix = config["LOG_GOACCESS_PREFIX"] || "goaccess";
+    if (prefix && !prefix.endsWith("/")) {
+        prefix = prefix + "/";
+    }
+    const key = `${prefix}goaccess-report-${dateStr}.html`;
+
+    const cmd = new GetObjectCommand({
+        Bucket: outputBucket,
+        Key: key,
+    });
+
+    const resp = await s3Client.send(cmd);
+    const html = await streamToString(resp.Body);
+
+    return { html, bucket: outputBucket, key };
+}
+
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, "&amp;")
@@ -567,12 +700,77 @@ function escapeHtml(str) {
 exports.handler = async (event) => {
     try {
         const cfg = await getConfig();
-        const dateStr = getDateFromEvent(event);
         const qs = event?.queryStringParameters || {};
+        const hasAnyQuery = qs && Object.keys(qs).length > 0;
+
+        // Default date is always yesterday (UTC)
+        const dateStr = getDateFromEvent(event);
         const forceOnly = qs.force === "1";
+        const view = qs.view || "summary";
+
+        // If the user hit the bare Function URL with no query params at all,
+        // show a simple welcome/landing page with links to yesterday's reports.
+        if (!hasAnyQuery) {
+            const html = renderWelcomeHtml(dateStr);
+            return {
+                statusCode: 200,
+                headers: {
+                    "Content-Type": "text/html; charset=utf-8",
+                },
+                body: html,
+            };
+        }
 
         let reportData;
         let s3Uri;
+
+        if (view === "goaccess") {
+            let goHtml;
+
+            try {
+                const { html } = await loadGoaccessHtmlForDate(cfg, dateStr);
+                goHtml = html;
+            } catch (err) {
+                console.error("Error loading GoAccess report on first attempt:", err);
+
+                const goLambdaName = cfg["LOG_GOACCESS_LAMBDA_NAME"];
+
+                // Initial request: trigger GoAccess Lambda asynchronously
+                if (!forceOnly && goLambdaName) {
+                    try {
+                        const invokeCmd = new InvokeCommand({
+                            FunctionName: goLambdaName,
+                            InvocationType: "Event",       // async fire-and-forget
+                            Payload: Buffer.from(JSON.stringify({ date: dateStr })),
+                        });
+                        await lambdaClient.send(invokeCmd);
+                    } catch (invokeErr) {
+                        console.error("Error triggering GoAccess Lambda:", invokeErr);
+                    }
+                } else if (!goLambdaName) {
+                    console.error("LOG_GOACCESS_LAMBDA_NAME not set in config; cannot trigger GoAccess analysis.");
+                }
+
+                // Show loading page; client will poll with ?force=1
+                const html = renderLoadingHtml(dateStr);
+                return {
+                    statusCode: 200,
+                    headers: {
+                        "Content-Type": "text/html; charset=utf-8",
+                    },
+                    body: html,
+                };
+            }
+
+            // If we reach here, GoAccess HTML exists -> return it directly
+            return {
+                statusCode: 200,
+                headers: {
+                    "Content-Type": "text/html; charset=utf-8",
+                },
+                body: goHtml,
+            };
+        }
 
         try {
             // First attempt: load existing report for this date

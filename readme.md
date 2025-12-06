@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.3.1
+## Version 0.4.0
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -142,6 +142,12 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+
+### v0.4.0
+- Idea: Implement a Docker container in ECS to run GoAccess... in AWS Academy Lab we don't have permission to create a cluster
+- Create: Using Docker on my local machine I created a goaccess as binary for ARM
+- Create: lambda function to use goaccess binary as a layer and create a report using .log file
+- Modified: View Report app now have a welcome message and buttons to retrieve our analysis report or GoAccess report
 
 ### v0.3.1
 - Improved: Report View app to trigger the analysis lambda function if the report .json not available
