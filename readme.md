@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.5.2
+## Version 0.5.3
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -142,6 +142,9 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+### v0.5.3
+- Created: Bash script (step 8) to create all the buckets needed in the pipeline
+- Created: Bash script (step 9) to upload ssh private key to the ssh-key-bucket
 
 ### v0.5.2
 - Created: Bash script (step 7) to build GoAccess lambda function which is use a custom layer

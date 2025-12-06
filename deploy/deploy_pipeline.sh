@@ -241,4 +241,58 @@ case "${step6_action}" in
     ;;
 esac
 
+# ---------------------------------------------------------------------------
+# 8) Create S3 buckets for the pipeline
+# ---------------------------------------------------------------------------
 
+if [[ ! -f "${PROJECT_ROOT}/deploy/8_create_buckets.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/8_create_buckets.sh" >&2
+  exit 1
+fi
+
+step6_action="$(prompt_step_action "8" "Create S3 buckets")"
+
+case "${step6_action}" in
+  continue)
+    echo "[8/8] Create S3 buckets ..."
+    "${PROJECT_ROOT}/deploy/8_create_buckets.sh"
+    echo "[8/8] Create S3 buckets."
+    echo
+    ;;
+  skip)
+    echo "[8/8] Skipping Create S3 buckets deployment (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
+
+# ---------------------------------------------------------------------------
+# 9) Upload private key to the S3 ssh-key-bucket
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "${PROJECT_ROOT}/deploy/9_upload_private_key.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/9_upload_private_key.sh" >&2
+  exit 1
+fi
+
+step6_action="$(prompt_step_action "9" "Upload ssh private key to the S3 ssh-key-bucket")"
+
+case "${step6_action}" in
+  continue)
+    echo "[9/8] Upload ssh private key ..."
+    "${PROJECT_ROOT}/deploy/9_upload_private_key.sh"
+    echo "[9/8] Upload ssh private key."
+    echo
+    ;;
+  skip)
+    echo "[9/8] Skipping Upload ssh private key (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
