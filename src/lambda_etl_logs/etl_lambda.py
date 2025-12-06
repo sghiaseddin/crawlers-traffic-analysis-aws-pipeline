@@ -7,7 +7,7 @@ from typing import Dict, Any
 import boto3
 from botocore.exceptions import ClientError
 
-from lambda_etl_logs.etl_logic import process_gzip_to_csv_bytes
+from etl_logic import process_gzip_to_csv_bytes
 
 secrets_client = boto3.client("secretsmanager")
 s3_client = boto3.client("s3")
