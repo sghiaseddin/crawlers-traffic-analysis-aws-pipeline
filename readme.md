@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.5.0
+## Version 0.5.1
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -143,16 +143,21 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 ---
 ## Changelog
 
+### v0.5.1
+- Created: Bash script (step 5) to build ETL lambda function 
+- Created: Bash script (step 6) to build Log Analyzer lambda function 
+- Improved: File base structure
+
 ### v0.5.0
-- Create: Bash script deploy logic, single deploy pipeline with multiple steps
-- Create: Bash scripts to read and load .env and AWS credentials
-- Create: Bash script (step 3) to store secrets and naming conventions in the AWS Secret Manager
-- Create: Bash Script (step 2) to build node package to create a lambda function to pull data from external service
+- Created: Bash script deploy logic, single deploy pipeline with multiple steps
+- Created: Bash scripts to read and load .env and AWS credentials
+- Created: Bash script (step 3) to store secrets and naming conventions in the AWS Secret Manager
+- Created: Bash Script (step 4) to build node package to create a lambda function to pull data from external service
 
 ### v0.4.0
 - Idea: Implement a Docker container in ECS to run GoAccess... in AWS Academy Lab we don't have permission to create a cluster
-- Create: Using Docker on my local machine I created a goaccess as binary for ARM
-- Create: lambda function to use goaccess binary as a layer and create a report using .log file
+- Created: Using Docker on my local machine I created a goaccess as binary for ARM
+- Created: lambda function to use goaccess binary as a layer and create a report using .log file
 - Modified: View Report app now have a welcome message and buttons to retrieve our analysis report or GoAccess report
 
 ### v0.3.1
