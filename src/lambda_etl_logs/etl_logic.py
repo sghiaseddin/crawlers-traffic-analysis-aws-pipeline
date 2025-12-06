@@ -1,5 +1,5 @@
 """
-ETL processor for LLM bot access logs.
+ETL processor for access logs.
 
 Responsibilities:
 - Read compressed nginx access logs (.gz)
@@ -7,9 +7,7 @@ Responsibilities:
 - Emit a CSV with one row per request
 
 This module is written so it can be:
-- Run locally as a CLI script
 - Wrapped in an AWS Lambda handler
-- Reused inside an AWS Glue / PySpark job (via UDF or plain Python parsing)
 """
 
 import csv
@@ -263,29 +261,3 @@ def process_gzip_file_to_csv_file(
 
         for pl in parse_gzip_stream(f_in.read()):
             writer.writerow(parsed_logline_to_row(pl))
-
-
-# ----------------------------
-# Optional: simple CLI entrypoint
-# ----------------------------
-
-def main() -> None:
-    """
-    Basic CLI usage:
-
-      python -m etl_llm_logs \\
-        --input path/to/access.log-2025-10-31.gz \\
-        --output path/to/parsed-2025-10-31.csv
-    """
-    import argparse
-
-    parser = argparse.ArgumentParser(description="ETL for LLM bot access logs")
-    parser.add_argument("--input", required=True, help="Path to input .gz log file")
-    parser.add_argument("--output", required=True, help="Path to output .csv file")
-
-    args = parser.parse_args()
-    process_gzip_file_to_csv_file(args.input, args.output)
-
-
-if __name__ == "__main__":
-    main()

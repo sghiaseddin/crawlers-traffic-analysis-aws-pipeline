@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.4.0
+## Version 0.5.0
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -49,12 +49,12 @@ The pipeline operates step-by-step as follows: First, the Secrets Manager secure
 
 | Module | Description | Technology | Official Documentation |
 | --- | --- | --- | --- |
-| Secrets Manager Module | Manages SSH keys and credentials securely across the pipeline | AWS Secrets Manager | https://aws.amazon.com/secrets-manager/ |
-| Log Fetcher | Securely copies daily `.gz` access logs from a remote web server via SSH/SCP; runs daily to fetch the data for the previous day | AWS Lambda and Secrets Manager | https://aws.amazon.com/lambda/ |
-| ETL Processor | Unzips, parses, classifies, and aggregates logs into structured CSV data | AWS Glue (PySpark) or AWS Lambda (Python) | https://aws.amazon.com/glue/ |
-| Data Analyzer | Uses Python-based analytics to produce daily per-bot/page CSV and cumulative summary CSV | AWS Lambda or AWS Batch (Python and pandas) | https://aws.amazon.com/batch/ |
-| Report Generator | Renders a GoAccess HTML dashboard using a Docker container running GoAccess and uploads to a public S3 bucket | Docker container, S3 static website hosting | https://aws.amazon.com/s3/, https://goaccess.io/ |
-| Automation and Config | Deploys and configures all components from `.env` variables | Bash and AWS CLI | https://aws.amazon.com/cli/ |
+| Secrets Manager Module | Manages SSH keys and credentials securely across the pipeline | AWS Secrets Manager | https://AWS.amazon.com/secrets-manager/ |
+| Log Fetcher | Securely copies daily `.gz` access logs from a remote web server via SSH/SCP; runs daily to fetch the data for the previous day | AWS Lambda and Secrets Manager | https://AWS.amazon.com/lambda/ |
+| ETL Processor | Unzips, parses, classifies, and aggregates logs into structured CSV data | AWS Glue (PySpark) or AWS Lambda (Python) | https://AWS.amazon.com/glue/ |
+| Data Analyzer | Uses Python-based analytics to produce daily per-bot/page CSV and cumulative summary CSV | AWS Lambda or AWS Batch (Python and pandas) | https://AWS.amazon.com/batch/ |
+| Report Generator | Renders a GoAccess HTML dashboard using a Docker container running GoAccess and uploads to a public S3 bucket | Docker container, S3 static website hosting | https://AWS.amazon.com/s3/, https://goaccess.io/ |
+| Automation and Config | Deploys and configures all components from `.env` variables | Bash and AWS CLI | https://AWS.amazon.com/cli/ |
 
 
 ## Input Files
@@ -143,6 +143,12 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 ---
 ## Changelog
 
+### v0.5.0
+- Create: Bash script deploy logic, single deploy pipeline with multiple steps
+- Create: Bash scripts to read and load .env and AWS credentials
+- Create: Bash script (step 3) to store secrets and naming conventions in the AWS Secret Manager
+- Create: Bash Script (step 2) to build node package to create a lambda function to pull data from external service
+
 ### v0.4.0
 - Idea: Implement a Docker container in ECS to run GoAccess... in AWS Academy Lab we don't have permission to create a cluster
 - Create: Using Docker on my local machine I created a goaccess as binary for ARM
@@ -155,7 +161,7 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ### v0.3.0
 - Created: Analysis lambda function to answer the questions of the research and store the report in the output bucket as json
-- Created: Node.js app to render the report .json file and show on a aws url
+- Created: Node.js app to render the report .json file and show on a AWS url
 
 ### v0.2.1
 - Edited: ETL lambda function to output aggregated .csv and .log file too
@@ -169,7 +175,7 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 - Improved: fetch function compare log files in external with bucket and copy only new items, except today's log 
 
 ### v0.1.0
-- Created: lambda function to fetch logs using ssh connection, in node.js. source: https://stackoverflow.com/questions/57127454/accessing-and-copying-files-from-sftp-server-using-aws-lambda-nodejs
+- Created: lambda function to fetch logs using ssh connection, in node.js. source: https://stackoverflow.com/questions/57127454/accessing-and-copying-files-from-sftp-server-using-AWS-lambda-nodejs
 
 ---
 ## License
