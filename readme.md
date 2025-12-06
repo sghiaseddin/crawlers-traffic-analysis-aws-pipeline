@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.5.5
+## Version 0.5.6
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -142,6 +142,10 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+
+### v0.5.6
+- Fixed: Bash script (step 11) to set a trigger for lambda_etl_logs on file add to raw files bucket
+- Added: The manual trigger to fetch the logs at the end of pipeline
 
 ### v0.5.5
 - Created: Bash script (step 11) to set trigger for lambda function in EventBridge
