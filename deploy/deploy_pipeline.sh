@@ -254,9 +254,9 @@ step6_action="$(prompt_step_action "8" "Create S3 buckets")"
 
 case "${step6_action}" in
   continue)
-    echo "[8/8] Create S3 buckets ..."
+    echo "[8/8] Creating S3 buckets ..."
     "${PROJECT_ROOT}/deploy/8_create_buckets.sh"
-    echo "[8/8] Create S3 buckets."
+    echo "[8/8] S3 buckets created."
     echo
     ;;
   skip)
@@ -282,13 +282,42 @@ step6_action="$(prompt_step_action "9" "Upload ssh private key to the S3 ssh-key
 
 case "${step6_action}" in
   continue)
-    echo "[9/8] Upload ssh private key ..."
+    echo "[9/8] Uploading ssh private key ..."
     "${PROJECT_ROOT}/deploy/9_upload_private_key.sh"
-    echo "[9/8] Upload ssh private key."
+    echo "[9/8] ssh private key uploaded."
     echo
     ;;
   skip)
     echo "[9/8] Skipping Upload ssh private key (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
+
+
+# ---------------------------------------------------------------------------
+# 9) Set database and crawler in Glue
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "${PROJECT_ROOT}/deploy/10_set_crawler_glue.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/10_set_crawler_glue.sh" >&2
+  exit 1
+fi
+
+step6_action="$(prompt_step_action "10" "Set database and crawler in the Glue")"
+
+case "${step6_action}" in
+  continue)
+    echo "[10/8] Setting database and crawler ..."
+    "${PROJECT_ROOT}/deploy/10_set_crawler_glue.sh"
+    echo "[10/8] Database and crawler has set."
+    echo
+    ;;
+  skip)
+    echo "[10/8] Skipping Set database and crawler (per user choice)."
     echo
     ;;
   quit)
