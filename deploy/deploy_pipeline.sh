@@ -194,7 +194,7 @@ if [[ ! -f "${PROJECT_ROOT}/deploy/6_analyze_bots_lambda.sh" ]]; then
   exit 1
 fi
 
-step6_action="$(prompt_step_action "5" "Package & deploy the Python Analyze Bots Lambda")"
+step6_action="$(prompt_step_action "6" "Package & deploy the Python Analyze Bots Lambda")"
 
 case "${step6_action}" in
   continue)
@@ -213,11 +213,32 @@ case "${step6_action}" in
     ;;
 esac
 
+# ---------------------------------------------------------------------------
+# 7) Package & deploy the GoAccess Engine Lambda
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "${PROJECT_ROOT}/deploy/7_goaccess_lambda.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/7_goaccess_lambda.sh" >&2
+  exit 1
+fi
+
+step6_action="$(prompt_step_action "7" "Package & deploy the GoAccess Engine Lambda")"
+
+case "${step6_action}" in
+  continue)
+    echo "[7/7] Packaging & deploying GoAccess Engine Lambda ..."
+    "${PROJECT_ROOT}/deploy/7_goaccess_lambda.sh"
+    echo "[7/7] GoAccess Engine Lambda deployed."
+    echo
+    ;;
+  skip)
+    echo "[7/7] Skipping GoAccess Engine Lambda deployment (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
 
 
-echo "Deployment orchestrator finished steps 1–5."
-echo "Next steps (future scripts):"
-echo "  - deploy/6_configure_buckets.sh       # create S3 buckets (if needed)"
-echo "  - deploy/7_deploy_remaining_lambdas.sh # package & deploy remaining Lambda functions (analysis, view, goaccess)"
-echo "  - deploy/8_configure_triggers.sh      # S3, EventBridge, and other triggers"
-echo
