@@ -222,9 +222,9 @@ if [[ ! -f "${PROJECT_ROOT}/deploy/7_goaccess_lambda.sh" ]]; then
   exit 1
 fi
 
-step6_action="$(prompt_step_action "7" "Package & deploy the GoAccess Engine Lambda")"
+step7_action="$(prompt_step_action "7" "Package & deploy the GoAccess Engine Lambda")"
 
-case "${step6_action}" in
+case "${step7_action}" in
   continue)
     echo "[7/7] Packaging & deploying GoAccess Engine Lambda ..."
     "${PROJECT_ROOT}/deploy/7_goaccess_lambda.sh"
@@ -250,9 +250,9 @@ if [[ ! -f "${PROJECT_ROOT}/deploy/8_create_buckets.sh" ]]; then
   exit 1
 fi
 
-step6_action="$(prompt_step_action "8" "Create S3 buckets")"
+step8_action="$(prompt_step_action "8" "Create S3 buckets")"
 
-case "${step6_action}" in
+case "${step8_action}" in
   continue)
     echo "[8/8] Creating S3 buckets ..."
     "${PROJECT_ROOT}/deploy/8_create_buckets.sh"
@@ -278,9 +278,9 @@ if [[ ! -f "${PROJECT_ROOT}/deploy/9_upload_private_key.sh" ]]; then
   exit 1
 fi
 
-step6_action="$(prompt_step_action "9" "Upload ssh private key to the S3 ssh-key-bucket")"
+step9_action="$(prompt_step_action "9" "Upload ssh private key to the S3 ssh-key-bucket")"
 
-case "${step6_action}" in
+case "${step9_action}" in
   continue)
     echo "[9/8] Uploading ssh private key ..."
     "${PROJECT_ROOT}/deploy/9_upload_private_key.sh"
@@ -299,7 +299,7 @@ esac
 
 
 # ---------------------------------------------------------------------------
-# 9) Set database and crawler in Glue
+# 10) Set database and crawler in Glue
 # ---------------------------------------------------------------------------
 
 if [[ ! -f "${PROJECT_ROOT}/deploy/10_set_crawler_glue.sh" ]]; then
@@ -307,9 +307,9 @@ if [[ ! -f "${PROJECT_ROOT}/deploy/10_set_crawler_glue.sh" ]]; then
   exit 1
 fi
 
-step6_action="$(prompt_step_action "10" "Set database and crawler in the Glue")"
+step10_action="$(prompt_step_action "10" "Set database and crawler in the Glue")"
 
-case "${step6_action}" in
+case "${step10_action}" in
   continue)
     echo "[10/8] Setting database and crawler ..."
     "${PROJECT_ROOT}/deploy/10_set_crawler_glue.sh"
@@ -325,3 +325,62 @@ case "${step6_action}" in
     exit 0
     ;;
 esac
+
+
+# ---------------------------------------------------------------------------
+# 11) Set daily cron job in the EventBridge
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "${PROJECT_ROOT}/deploy/11_cron_job_eventbridge.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/11_cron_job_eventbridge.sh" >&2
+  exit 1
+fi
+
+step11_action="$(prompt_step_action "11" "Set daily cron job in the EventBridge")"
+
+case "${step11_action}" in
+  continue)
+    echo "[11/8] Setting daily cron job ..."
+    "${PROJECT_ROOT}/deploy/11_cron_job_eventbridge.sh"
+    echo "[11/8] Cron job has set."
+    echo
+    ;;
+  skip)
+    echo "[11/8] Skipping daily cron job (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
+
+
+# ---------------------------------------------------------------------------
+# 12) Package and Deploy View Report Node in Lambda Function
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "${PROJECT_ROOT}/deploy/12_view_report_node_lambda.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/12_view_report_node_lambda.sh" >&2
+  exit 1
+fi
+
+step12_action="$(prompt_step_action "12" "Set Package and Deploy View Report Node in Lambda Function")"
+
+case "${step12_action}" in
+  continue)
+    echo "[12/8] Packaging view report node ..."
+    "${PROJECT_ROOT}/deploy/12_view_report_node_lambda.sh"
+    echo "[12/8] View report node deployed."
+    echo
+    ;;
+  skip)
+    echo "[12/8] Skipping view report node (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
+
