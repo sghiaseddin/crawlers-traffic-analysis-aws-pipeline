@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.5.7
+## Version 0.5.8
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -13,7 +13,9 @@ As LLM bots like GPTBot, PerplexityBot, ClaudeBot, and others increasingly crawl
 - Which pages they are collecting content from
 - How this behavior changes over time
 
-Currently, traditional web tracking tools like Google Analytics cannot detect these bots because they rely on JavaScript execution within the user’s browser to capture activity, and since crawlers do not execute JavaScript but only read the HTML content directly, their visits go unnoticed. Web access logs contain this information, but it is buried inside large, compressed `.gz` log files that require manual inspection and technical expertise to interpret. This pipeline automates the entire process from retrieving, parsing, and analyzing raw access logs to producing clear, daily and cumulative CSV reports and visual summaries.
+Traditional web tracking tools like Google Analytics cannot detect these crawlers because they rely on JavaScript running in the visitor’s browser. LLM bots never execute JavaScript — they fetch HTML directly — so their requests never appear in analytics dashboards. Web access logs *do* contain this information, but they are stored as large compressed `.gz` files that require technical parsing and filtering to extract meaningful insights.
+
+This pipeline fully automates the process end‑to‑end: it retrieves daily access logs from the remote server, unpacks and parses them into structured CSVs for data cataloging, generates cumulative aggregated `.csv` and `.log` files, analyzes LLM bot behavior using a dedicated analytics Lambda that outputs a structured **JSON** report, and finally renders a browsable HTML dashboard using GoAccess. The result is a hands‑free system that produces daily JSON insights, cumulative bot activity summaries, and visual dashboards without requiring any manual log inspection.
 
 ## Stakeholders
 
@@ -29,8 +31,8 @@ Currently, traditional web tracking tools like Google Analytics cannot detect th
 ### Goal Statement
 
 Develop a serverless, configurable AWS data pipeline that automatically ingests daily web server access logs, classifies and analyzes LLM bot traffic, and produces:
-1. Daily detailed CSV reports (bot activity per page)
-2. Cumulative summary CSV reports (aggregated by bot type and timeframe)
+1. Daily detailed HTML reports (bot activity per page)
+2. Cumulative summary HTML reports (aggregated by bot type and timeframe)
 3. A publicly viewable HTML analytics dashboard (via GoAccess)
 
 The entire system deploys automatically using a single Bash script, configurable through a `.env` file, making it reusable for any website with minimal setup.
@@ -45,7 +47,15 @@ This approach is ideal because:
 
 ## Architecture Overview
 
-The pipeline operates step-by-step as follows: First, the Secrets Manager securely stores SSH keys and credentials needed to access the remote web servers. AWS Lambda functions then use these secrets to securely fetch daily compressed access logs via SCP. Once the logs are retrieved, the ETL Processor (implemented using AWS Glue or Lambda) unzips, parses, and classifies the log data into structured CSV files. The Data Analyzer component further processes these CSVs using Python analytics to generate daily per-bot/page summaries and cumulative reports. Meanwhile, the Report Generator runs a Docker container with GoAccess to create an HTML dashboard visualizing the bot traffic, which is then uploaded to a public S3 bucket for easy access. Throughout this process, the Automation and Config module orchestrates deployment and configuration using a Bash script and AWS CLI, ensuring all components work together seamlessly and are configurable via environment variables.
+The pipeline operates in a fully serverless, modular sequence orchestrated through AWS services and a unified Bash deployment workflow. Secrets Manager securely stores all environment variables and naming conventions. A dedicated Node.js Lambda function fetches remote access logs daily over SSH/SFTP, using a private key stored in S3 and configuration loaded from Secrets Manager. Each downloaded `.gz` file is placed into the raw logs S3 bucket.
+
+When a new raw log arrives, S3 automatically triggers the ETL Lambda. This Python-based ETL function decompresses the log, parses each access entry, extracts structured fields, and writes both: (1) a daily CSV file into the `parsed/` prefix of the processing bucket, and (2) cumulative aggregated `.csv` and `.log` files used by analytical and visualization components. AWS Glue Crawler continuously catalogs the parsed CSV files into a Glue Database, enabling downstream Athena or analytical queries.
+
+A separate analytics Lambda (`analyze_bots`) processes the cumulative CSV to generate a structured **JSON** report that summarizes LLM bot activity over the previous 365 days. This report is written into the output bucket with a date‑specific filename for caching and historical retrieval.
+
+For visualization, a GoAccess ARM64 Lambda uses a custom Layer containing the GoAccess binary. It processes the cumulative `.log` file and outputs a time‑based HTML dashboard. A separate Node.js `view_report` Lambda exposes a public Function URL, allowing users to access a simple web interface that fetches the latest analytics JSON and GoAccess HTML report on demand. If the analytics report for yesterday does not yet exist, the view interface automatically triggers the analytics Lambda and displays a loading message until the report is ready.
+
+The entire stack—including buckets, Lambdas, Layers, Glue crawler, IAM settings, and scheduled triggers—is deployed and configured using a single interactive Bash pipeline driven by values from a `.env` file. This ensures reproducibility, portable configuration, and minimal manual AWS console interaction.
 
 | Module | Description | Technology | Official Documentation |
 | --- | --- | --- | --- |
@@ -53,44 +63,27 @@ The pipeline operates step-by-step as follows: First, the Secrets Manager secure
 | Log Fetcher | Securely copies daily `.gz` access logs from a remote web server via SSH/SCP; runs daily to fetch the data for the previous day | AWS Lambda and Secrets Manager | https://AWS.amazon.com/lambda/ |
 | ETL Processor | Unzips, parses, classifies, and aggregates logs into structured CSV data | AWS Glue (PySpark) or AWS Lambda (Python) | https://AWS.amazon.com/glue/ |
 | Data Analyzer | Uses Python-based analytics to produce daily per-bot/page CSV and cumulative summary CSV | AWS Lambda or AWS Batch (Python and pandas) | https://AWS.amazon.com/batch/ |
-| Report Generator | Renders a GoAccess HTML dashboard using a Docker container running GoAccess and uploads to a public S3 bucket | Docker container, S3 static website hosting | https://AWS.amazon.com/s3/, https://goaccess.io/ |
+| Report Generator | Renders a GoAccess HTML dashboard using a Lambda function with GoAccess layer and uploads to a public S3 bucket | Docker container, S3 static website hosting | https://AWS.amazon.com/s3/, https://goaccess.io/ |
 | Automation and Config | Deploys and configures all components from `.env` variables | Bash and AWS CLI | https://AWS.amazon.com/cli/ |
 
 
 ## Input Files
 
 ```log
-172.213.21.159 www.builderleadconverter.com - [01/Oct/2025:05:41:30 +0000] "GET /digital-marketing-strategy-for-a-construction-company/ HTTP/2.0" 200 31450 "-" "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot" | TLSv1.3 | 0.027 0.030 0.031 MISS 0 NC:000000 UP:-
-216.144.248.24 www.builderleadconverter.com - [01/Oct/2025:05:58:49 +0000] "GET / HTTP/2.0" 304 0 "https://builderleadconverter.com" "Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)" | TLSv1.3 | 0.050 0.050 0.051 MISS 0 NC:000000 UP:-
-110.238.105.89 www.builderleadconverter.com - [01/Oct/2025:06:02:44 +0000] "GET /wp-content/uploads/2021/03/flip-card8.jpg HTTP/2.0" 404 15310 "https://www.builderleadconverter.com/sales-automation/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" | TLSv1.3 | 1.847 1.854 1.854 MISS 0 NC:000000 UP:-
+172.213.21.159 example.com - [01/Oct/2025:05:41:30 +0000] "GET /digital-marketing-strategy-for-a-construction-company/ HTTP/2.0" 200 31450 "-" "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot" | TLSv1.3 | 0.027 0.030 0.031 MISS 0 NC:000000 UP:-
+216.144.248.24 example.com - [01/Oct/2025:05:58:49 +0000] "GET / HTTP/2.0" 304 0 "https://builderleadconverter.com" "Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)" | TLSv1.3 | 0.050 0.050 0.051 MISS 0 NC:000000 UP:-
+110.238.105.89 example.com - [01/Oct/2025:06:02:44 +0000] "GET /wp-content/uploads/2021/03/flip-card8.jpg HTTP/2.0" 404 15310 "https://example.com/sales-automation/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" | TLSv1.3 | 1.847 1.854 1.854 MISS 0 NC:000000 UP:-
 ```
 
 ## Output Files
 
 | Output | Format | Example Path | Purpose |
 | --- | --- | --- | --- |
-| Daily Raw Logs | .log | `s3://<RAW_BUCKET>/raw/date=2025-10-31/` | Source logs pulled from web server |
-| Daily Bot Summary | .csv | `s3://<REPORTS_BUCKET>/summaries/date=2025-10-31/summary.csv` | Daily count by bot and pages hit |
-| Cumulative Report | .csv | `s3://<REPORTS_BUCKET>/cumulative/cumulative_summary.csv` | All-time aggregated results |
-| Public Dashboard | .html | `s3://<PUBLIC_BUCKET>/site/index.html` | Visual analytics all-time (GoAccess) |
-
-## Example Insights (from CSV)
-
-Example daily bot metrics:
-
-| date | bot | total_hits | unique_ips | unique_pages |
-| --- | --- | --- | --- | --- |
-| 2025-10-29 | GPTBot | 1532 | 47 | 412 |
-| 2025-10-29 | PerplexityBot | 682 | 19 | 158 |
-| 2025-10-29 | ClaudeBot | 244 | 11 | 99 |
-
-Example cumulative per-page activity by bot:
-
-| page | bot | hits |
-| --- | --- | --- |
-| / | GPTBot | 210 |
-| /sales-automation/ | PerplexityBot | 89 |
-| /services/ | GPTBot | 55 |
+| Daily Parsed CSV | `.csv` | `s3://<PROCESSING_BUCKET>/parsed/2025-12-04.csv` | Structured rows extracted from the raw log for Glue cataloging |
+| Cumulative Aggregated CSV | `.csv` | `s3://<PROCESSING_BUCKET>/aggregated/all_logs.csv` | Unified CSV containing all historical parsed logs used for analysis |
+| Cumulative Aggregated Log | `.log` | `s3://<PROCESSING_BUCKET>/aggregated/all_logs.log` | Unified raw log format consumed by GoAccess for HTML dashboard generation |
+| Bot Analysis Report | `.json` | `s3://<OUTPUT_BUCKET>/reports/bot-analysis-2025-12-04.json` | Daily generated LLM bot behavior summary for the past year |
+| GoAccess Dashboard | `.html` | `s3://<OUTPUT_BUCKET>/goaccess/goaccess-report-2025-12-04.html` | Visual time‑series dashboard of all log activity |
 
 ## Risks and Mitigations
 
@@ -101,22 +94,69 @@ Example cumulative per-page activity by bot:
 | Large log volumes | Very large websites could exceed Lambda memory limits | Use AWS Glue or Batch (PySpark or pandas chunking) for scalable ETL |
 | Cost creep over time | Daily processing and storage | Lifecycle policies to expire raw logs after a defined number of days |
 
-## Repository Structure (Planned)
+## Repository Structure
 
 ```
 deploy/
-  deploy_llm_log_pipeline.sh     # Automated deployment script
+  deploy_pipeline.sh                # Main orchestrator with interactive steps
+  1_read_env_variables.sh
+  2_read_aws_credential.sh
+  3_store_secrets_namings.sh
+  4_fetch_log_lambda.sh
+  5_etl_logs_lambda.sh
+  6_analyze_bots_lambda.sh
+  7_goaccess_lambda.sh
+  8_create_buckets.sh
+  9_upload_private_key.sh
+  10_set_crawler_glue.sh
+  11_cron_job_eventbridge.sh
+  12_view_report_node_lambda.sh
 src/
-  lambda_fetch_logs_node/        # Node.js app to fetch log files using ssh and trigger the ETL
-  glue_etl/                      # Log parser and CSV generator
-  data_analysis/                 # Python analytics (CSV aggregation)
-  docker_goaccess/               # Docker container running GoAccess HTML generator
-    Dockerfile                   # Dockerfile to build GoAccess container image
-config/
-  bot_map.json                   # Regex map of known bots
-.env.example                     # Config template
-README.md                        # Documentation (this file)
+  lambda_fetch_logs_node/           # pull data for external server
+    index.js
+    package.json
+    package-lock.json
+  lambda_etl_logs/                  # read logs and convert them to csv
+    etl_lambda.py
+    etl_logic.py
+  lambda_analyze_bots/              # analyze aggregated csv file on demand and output insights as json
+    analyze_bots.py
+    bot_map.json
+  lambda_run_goaccess_arm64/        # visualize aggregated log file
+    goaccess                        # ARM64 static binary
+    goaccess.conf
+    run_goaccess_arm64.py
+  lambda_view_report/               # frontend dashboard to view report on a aws url
+    index.js
+    package.json
+    package-lock.json
+keys/
+  <private_key>                     # ssh private key to external server
+.env.example                        # example parameters to be filled
+credentials.example                 # aws credentials example
+README.md
+
 ```
+## Local Deployment Requirements
+
+To deploy the entire pipeline using the automated Bash orchestrator, the local machine must have the following tools installed:
+
+### Required
+- **Bash** (v4 or later)
+- **AWS CLI v2** (configured or ready to load credentials via the pipeline)
+- **Node.js (v20+) + npm** — required for building Node-based Lambda functions
+- **zip** — used to build Lambda deployment packages
+
+### Required Inputs
+- **SSH private key** placed under `keys/` and named according to `.env` → `LOG_FETCH_PRIVATE_KEY_S3_KEY`
+- **Valid AWS credentials** (loaded via the pipeline or standard AWS config)
+- **Correctly filled `.env` file** defining all bucket names, Lambda names, prefixes, regions, etc.
+
+Once requirements are met, run:
+```bash
+bash ./deploy/deploy_pipeline.sh
+```
+and follow the interactive steps.
 
 ## KPIs and Quality Metrics
 
@@ -124,7 +164,7 @@ README.md                        # Documentation (this file)
 
 - **Data Completeness:** All daily access logs should be ingested without missing files.
 - **Classification Accuracy:** Bot classification must correctly identify known LLM crawlers with minimal false positives or negatives.
-- **Timely Delivery:** Daily reports and dashboards must be generated and available within a defined SLA (e.g., by 8 AM UTC the following day).
+- **Timely Delivery:** Reports and dashboards must be generated and available within reasonable time (on demand).
 
 ### Benchmark Process Using Google Search Console Crawl Stats
 
@@ -142,6 +182,12 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+
+### v0.5.8
+- Fixed: timeout for lambda function
+- Improved: Doc strings
+- Improved: Code base structure
+- Improved: Documentation
 
 ### v0.5.7
 - Fixed: naming in the env file

@@ -10,7 +10,6 @@
 #   - Creates or updates the Lambda function in AWS
 #   - Names the function using PROJECT_PREFIX:
 #       ${PROJECT_PREFIX}_lambda_fetch_logs_node
-#   - Tags the Lambda with ProjectPrefix=${PROJECT_PREFIX}
 #
 # Prereqs:
 #   - 1_read_env_variables.sh has been sourced (PROJECT_PREFIX, PROJECT_AWS_REGION, etc.)
@@ -32,7 +31,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then
@@ -56,7 +55,7 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
 fi
 
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_fetch_logs_node"
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
 ROLE_NAME="${PROJECT_AWS_IAM_ROLE:-LabRole}"
 
 echo "Target AWS Region : ${REGION}"
@@ -151,7 +150,7 @@ if [[ "${get_fn_exit}" -ne 0 ]]; then
     --runtime nodejs20.x \
     --role "${ROLE_ARN}" \
     --handler index.handler \
-    --timeout 300 \
+    --timeout 120 \
     --memory-size 512 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}" \
     --zip-file "fileb://${PACKAGE_FILE}"
@@ -170,7 +169,7 @@ else
     --runtime nodejs20.x \
     --role "${ROLE_ARN}" \
     --handler index.handler \
-    --timeout 900 \
+    --timeout 120 \
     --memory-size 512 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}"
 

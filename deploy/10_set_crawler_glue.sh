@@ -34,7 +34,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then

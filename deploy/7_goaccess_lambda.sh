@@ -13,7 +13,6 @@
 #       * A Lambda func:   ${PROJECT_PREFIX}_lambda_run_goaccess_arm64
 #   - Uses runtime python3.12, architecture arm64
 #   - Keeps goaccess.conf with the function code (not in the layer)
-#   - Tags both layer version and function with ProjectPrefix=${PROJECT_PREFIX}
 #
 # Prereqs:
 #   - Env vars loaded via 1_read_env_variables.sh (PROJECT_PREFIX, PROJECT_AWS_REGION, etc.)
@@ -34,7 +33,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then
@@ -54,7 +53,7 @@ fi
 
 LAYER_NAME="${PROJECT_PREFIX}_goaccess_arm64_layer"
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_run_goaccess_arm64"
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
 ROLE_NAME="${PROJECT_AWS_IAM_ROLE:-LabRole}"
 
 echo "Target AWS Region : ${REGION}"
@@ -191,7 +190,7 @@ if [[ "${get_fn_exit}" -ne 0 ]]; then
     --architectures arm64 \
     --role "${ROLE_ARN}" \
     --handler run_goaccess_arm64.lambda_handler \
-    --timeout 900 \
+    --timeout 120 \
     --memory-size 1024 \
     --layers "${LAYER_VERSION_ARN}" \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}" \
@@ -212,7 +211,7 @@ else
     --architectures arm64 \
     --role "${ROLE_ARN}" \
     --handler run_goaccess_arm64.lambda_handler \
-    --timeout 900 \
+    --timeout 120 \
     --memory-size 1024 \
     --layers "${LAYER_VERSION_ARN}" \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}"

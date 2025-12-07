@@ -11,15 +11,6 @@
 #   - Replaces {project_prefix} placeholders in bucket/key names
 #     with the value of PROJECT_PREFIX
 #
-# Notes:
-#   - It is intended to be *sourced*, not executed as a standalone process,
-#     so that the variables are available in your current shell:
-#
-#       source deploy/1_read_env_variables.sh
-#
-#   - You can override the .env path by setting ENV_FILE before sourcing:
-#
-#       ENV_FILE=./config/my-env.env source deploy/1_read_env_variables.sh
 
 set -euo pipefail
 
@@ -69,6 +60,8 @@ _expand_with_project_prefix "LOG_FETCH_RAW_BUCKET"
 _expand_with_project_prefix "LOG_FETCH_PRIVATE_KEY_S3_BUCKET"
 _expand_with_project_prefix "LOG_PROCESSING_BUCKET"
 _expand_with_project_prefix "LOG_OUTPUT_BUCKET"
+_expand_with_project_prefix "LOG_ANALYSIS_LAMBDA_NAME"
+_expand_with_project_prefix "LOG_GOACCESS_LAMBDA_NAME"
 
 # Optional: show the resolved key variables for quick visual confirmation
 echo "PROJECT_PREFIX                  = ${PROJECT_PREFIX}"
@@ -76,5 +69,7 @@ echo "LOG_FETCH_RAW_BUCKET            = ${LOG_FETCH_RAW_BUCKET:-<not set>}"
 echo "LOG_FETCH_PRIVATE_KEY_S3_BUCKET = ${LOG_FETCH_PRIVATE_KEY_S3_BUCKET:-<not set>}"
 echo "LOG_PROCESSING_BUCKET           = ${LOG_PROCESSING_BUCKET:-<not set>}"
 echo "LOG_OUTPUT_BUCKET               = ${LOG_OUTPUT_BUCKET:-<not set>}"
+echo "LOG_ANALYSIS_LAMBDA_NAME        = ${LOG_ANALYSIS_LAMBDA_NAME:-<not set>}"
+echo "LOG_GOACCESS_LAMBDA_NAME        = ${LOG_GOACCESS_LAMBDA_NAME:-<not set>}"
 
 echo "Environment variables loaded and exported."

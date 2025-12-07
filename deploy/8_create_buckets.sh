@@ -11,8 +11,6 @@
 #       * LOG_FETCH_PRIVATE_KEY_S3_BUCKET
 #       * LOG_PROCESSING_BUCKET
 #       * LOG_OUTPUT_BUCKET
-#   - Creates them if missing, in the configured region
-#   - Applies a ProjectPrefix=<PROJECT_PREFIX> tag to each bucket
 #
 # Prereqs:
 #   - 1_read_env_variables.sh has been sourced (PROJECT_PREFIX, LOG_* vars, PROJECT_AWS_REGION, etc.)
@@ -33,7 +31,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then

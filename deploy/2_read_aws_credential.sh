@@ -13,7 +13,6 @@
 #   AWS_SECRET_ACCESS_KEY=...
 #   AWS_DEFAULT_REGION=...
 #
-# The variables are exported for use by AWS CLI in subsequent deploy steps.
 
 set -euo pipefail
 

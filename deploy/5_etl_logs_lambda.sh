@@ -10,8 +10,7 @@
 #   - Creates or updates the Lambda function in AWS
 #   - Names the function using PROJECT_PREFIX:
 #       ${PROJECT_PREFIX}_lambda_etl_logs
-#   - Configures runtime Python 3.12, x86_64, timeout 300s
-#   - Tags the Lambda with ProjectPrefix=${PROJECT_PREFIX}
+#   - Configures runtime Python 3.12, x86_64
 #
 # Prereqs:
 #   - 1_read_env_variables.sh has been sourced (PROJECT_PREFIX, PROJECT_AWS_REGION, etc.)
@@ -33,7 +32,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then
@@ -52,7 +51,7 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
 fi
 
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_etl_logs"
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
 ROLE_NAME="${PROJECT_AWS_IAM_ROLE:-LabRole}"
 
 echo "Target AWS Region : ${REGION}"
@@ -126,7 +125,7 @@ if [[ "${get_fn_exit}" -ne 0 ]]; then
     --architectures x86_64 \
     --role "${ROLE_ARN}" \
     --handler etl_lambda.handler \
-    --timeout 300 \
+    --timeout 120 \
     --memory-size 512 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}" \
     --zip-file "fileb://${PACKAGE_FILE}"
@@ -146,7 +145,7 @@ else
     --architectures x86_64 \
     --role "${ROLE_ARN}" \
     --handler etl_lambda.handler \
-    --timeout 300 \
+    --timeout 120 \
     --memory-size 512 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}"
 

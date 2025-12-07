@@ -11,7 +11,7 @@ KEYS_DIR="${PROJECT_ROOT}/keys"
 echo "=== Step 9: Upload private SSH key to S3 ==="
 echo "Project root : ${PROJECT_ROOT}"
 
-# Pre-flight checks
+# Requirement checks
 if ! command -v aws >/dev/null 2>&1; then
   echo "ERROR: aws CLI not found." >&2
   exit 1

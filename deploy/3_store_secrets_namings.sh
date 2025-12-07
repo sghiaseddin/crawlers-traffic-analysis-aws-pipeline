@@ -20,12 +20,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 echo "=== Step 3: Store configuration & naming in AWS Secrets Manager ==="
-echo "Script directory : ${SCRIPT_DIR}"
-echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then
@@ -39,8 +37,8 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
 fi
 
 SECRET_NAME="${PROJECT_PREFIX}-secrets-and-namings"
-# Prefer PROJECT_AWS_REGION from .env if set; fall back to AWS_DEFAULT_REGION; then default to eu-west-1
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}"
+# Prefer PROJECT_AWS_REGION from .env if set; fall back to AWS_DEFAULT_REGION; then default to us-east-1
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
 
 echo "Target AWS Region : ${REGION}"
 echo "Secret name       : ${SECRET_NAME}"

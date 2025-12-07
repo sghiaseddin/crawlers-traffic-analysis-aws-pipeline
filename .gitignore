@@ -46,3 +46,4 @@ docker-compose.override.yml
 #node modules
 src/lambda_fetch_logs_node/node_modules
 src/lambda_view_report/node_modules
+src/lambda_view_report/node_modules/@smithy/invalid-dependency/LICENSE

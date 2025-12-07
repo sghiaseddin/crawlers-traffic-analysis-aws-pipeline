@@ -4,23 +4,8 @@
 #
 # Orchestrates the deployment of the crawlers traffic analysis pipeline.
 #
-# High-level steps:
-#   1) Load project .env configuration (bucket names, prefixes, lambda names, etc.)
-#   2) Load AWS credentials for CLI operations
-#   3) Store env-derived configuration into AWS Secrets Manager
-#   4) Package & deploy the Node.js log-fetch Lambda
-#   5) Package & deploy the Python ETL logs Lambda
-#   6) (Future) Create S3 buckets, remaining Lambdas, triggers, etc.
-#
-# NOTE:
-#   This script is intended to be executed directly:
-#       ./deploy/deploy_pipeline.sh
-#
 
 set -euo pipefail
-
-# Disable AWS CLI pager so long outputs don't block in an interactive 'less' session.
-# export AWS_PAGER=""
 
 # Resolve script location and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -386,7 +371,7 @@ esac
 
 
 # ---------------------------------------------------------------------------
-# Final: Optional manual trigger of fetch-logs Lambda
+# Final: Manual trigger of fetch-logs Lambda
 # ---------------------------------------------------------------------------
 
 echo "-----------------------------------------------------------------"

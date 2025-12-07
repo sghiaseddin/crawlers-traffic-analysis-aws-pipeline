@@ -7,13 +7,9 @@
 #
 # This script:
 #   - Packages the Node.js view-report Lambda from src/lambda_view_report
-#   - Installs required runtime dependencies:
-#       @aws-sdk/client-secrets-manager
-#       @aws-sdk/client-s3
 #   - Creates or updates the Lambda function:
 #       ${PROJECT_PREFIX}_lambda_view_report_node
 #   - Configures a Lambda Function URL (AuthType=NONE) and prints it
-#   - Tags the Lambda with ProjectPrefix=${PROJECT_PREFIX}
 #
 # Prereqs:
 #   - 1_read_env_variables.sh has been sourced (PROJECT_PREFIX, PROJECT_AWS_REGION, etc.)
@@ -35,7 +31,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then
@@ -158,7 +154,7 @@ if [[ "${get_fn_exit}" -ne 0 ]]; then
     --runtime nodejs20.x \
     --role "${ROLE_ARN}" \
     --handler index.handler \
-    --timeout 900 \
+    --timeout 120 \
     --memory-size 1024 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}" \
     --zip-file "fileb://${PACKAGE_FILE}"
@@ -177,7 +173,7 @@ else
     --runtime nodejs20.x \
     --role "${ROLE_ARN}" \
     --handler index.handler \
-    --timeout 900 \
+    --timeout 120 \
     --memory-size 1024 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}"
 

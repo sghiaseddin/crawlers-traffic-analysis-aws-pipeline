@@ -11,7 +11,6 @@
 #   - Sets the target to the Node.js fetch-logs Lambda:
 #       ${PROJECT_PREFIX}_lambda_fetch_logs_node
 #   - Grants EventBridge permission to invoke that Lambda
-#   - Tags the EventBridge rule with ProjectPrefix=${PROJECT_PREFIX}
 #   - Configures an S3 bucket notification on the raw logs bucket to trigger
 #     the ETL Lambda (${PROJECT_PREFIX}_lambda_etl_logs) for new raw/*.gz files
 #
@@ -34,7 +33,7 @@ echo "Project root     : ${PROJECT_ROOT}"
 echo
 
 # ---------------------------------------------------------------------------
-# Pre-flight checks
+# Requirement checks
 # ---------------------------------------------------------------------------
 
 if ! command -v aws >/dev/null 2>&1; then
