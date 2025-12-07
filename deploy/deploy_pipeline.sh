@@ -55,36 +55,64 @@ prompt_step_action() {
 }
 
 # ---------------------------------------------------------------------------
-# 1) Load .env configuration
+# 0) Load .env configuration
 # ---------------------------------------------------------------------------
 
-if [[ ! -f "${PROJECT_ROOT}/deploy/1_read_env_variables.sh" ]]; then
-  echo "ERROR: Missing helper script: deploy/1_read_env_variables.sh" >&2
+if [[ ! -f "${PROJECT_ROOT}/deploy/0_read_env_variables.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/0_read_env_variables.sh" >&2
   exit 1
 fi
 
 # Source the env loader so that it exports all variables into this shell
 # (including expansion of {project_prefix} placeholders).
-echo "[1/12] Loading project environment variables from .env ..."
+echo "[0/12] Loading project environment variables from .env ..."
 # shellcheck disable=SC1090
-source "${PROJECT_ROOT}/deploy/1_read_env_variables.sh"
-echo "[1/12] Environment variables loaded."
+source "${PROJECT_ROOT}/deploy/0_read_env_variables.sh"
+echo "[0/12] Environment variables loaded."
 echo
 
 # ---------------------------------------------------------------------------
-# 2) Load AWS credentials for CLI (from local 'credentials' file)
+# 1) Load AWS credentials for CLI (from local 'credentials' file)
 # ---------------------------------------------------------------------------
 
-if [[ ! -f "${PROJECT_ROOT}/deploy/2_read_aws_credential.sh" ]]; then
-  echo "ERROR: Missing helper script: deploy/2_read_aws_credential.sh" >&2
+if [[ ! -f "${PROJECT_ROOT}/deploy/1_read_aws_credential.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/1_read_aws_credential.sh" >&2
   exit 1
 fi
 
-echo "[2/12] Loading AWS credentials from local credentials file ..."
+echo "[1/12] Loading AWS credentials from local credentials file ..."
 # shellcheck disable=SC1090
-source "${PROJECT_ROOT}/deploy/2_read_aws_credential.sh"
-echo "[2/12] AWS credentials loaded."
+source "${PROJECT_ROOT}/deploy/1_read_aws_credential.sh"
+echo "[1/12] AWS credentials loaded."
 echo
+
+# ---------------------------------------------------------------------------
+# 2) Store IAM role and policy
+# ---------------------------------------------------------------------------
+
+if [[ ! -f "${PROJECT_ROOT}/deploy/2_store_iam_role_policy.sh" ]]; then
+  echo "ERROR: Missing helper script: deploy/2_store_iam_role_policy.sh" >&2
+  exit 1
+fi
+
+step3_action="$(prompt_step_action "2" "Store IAM role and policy")"
+
+case "${step3_action}" in
+  continue)
+    echo "[2/12] Store IAM role and policy ..."
+    "${PROJECT_ROOT}/deploy/2_store_iam_role_policy.sh"
+    echo "[2/12] Store IAM role and policy stored."
+    echo
+    ;;
+  skip)
+    echo "[2/12] Skipping IAM role and policy (per user choice)."
+    echo
+    ;;
+  quit)
+    echo "User chose to quit deployment. Exiting."
+    exit 0
+    ;;
+esac
 
 # ---------------------------------------------------------------------------
 # 3) Store configuration & naming into AWS Secrets Manager
@@ -385,7 +413,7 @@ if [[ "${trigger_choice}" == "y" || "${trigger_choice}" == "yes" ]]; then
   if ! command -v aws >/dev/null 2>&1; then
     echo "ERROR: aws CLI not found. Cannot trigger Lambda." >&2
   else
-    REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+    REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-north-1}}"
     FETCH_LAMBDA_NAME="${PROJECT_PREFIX}_lambda_fetch_logs_node"
     INVOKE_OUT="/tmp/log_fetch_invoke.json"
 

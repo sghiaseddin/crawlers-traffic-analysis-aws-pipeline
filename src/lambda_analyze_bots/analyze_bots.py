@@ -294,7 +294,7 @@ def _get_config() -> Dict[str, Any]:
     return json.loads(cfg_str)
 
 
-def lambda_handler(event, context):
+def handler(event, context):
     """
     AWS Lambda entrypoint for bot analysis.
 

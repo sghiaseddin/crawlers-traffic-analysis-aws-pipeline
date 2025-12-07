@@ -1,5 +1,5 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 0.5.8
+## Version 0.5.9
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
 
@@ -182,6 +182,10 @@ This is group project for Data Engineering course by Szabó Ildikó Borbásné a
 
 ---
 ## Changelog
+
+### v0.5.9
+- Created: Bash script to set IAM Role and Policies
+- Fixed: Related to new IAM set
 
 ### v0.5.8
 - Fixed: timeout for lambda function

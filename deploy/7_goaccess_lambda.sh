@@ -53,7 +53,7 @@ fi
 
 LAYER_NAME="${PROJECT_PREFIX}_goaccess_arm64_layer"
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_run_goaccess_arm64"
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-north-1}}"
 ROLE_NAME="${PROJECT_AWS_IAM_ROLE:-LabRole}"
 
 echo "Target AWS Region : ${REGION}"

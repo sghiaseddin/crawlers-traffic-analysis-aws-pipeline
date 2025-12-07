@@ -37,8 +37,8 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
 fi
 
 SECRET_NAME="${PROJECT_PREFIX}-secrets-and-namings"
-# Prefer PROJECT_AWS_REGION from .env if set; fall back to AWS_DEFAULT_REGION; then default to us-east-1
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+# Prefer PROJECT_AWS_REGION from .env if set; fall back to AWS_DEFAULT_REGION; then default to eu-north-1
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-north-1}}"
 
 echo "Target AWS Region : ${REGION}"
 echo "Secret name       : ${SECRET_NAME}"

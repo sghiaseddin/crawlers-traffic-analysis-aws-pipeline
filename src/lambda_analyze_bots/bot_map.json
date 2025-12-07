@@ -39,7 +39,8 @@
       "Googlebot",
       "Googlebot/2.1",
       "AdsBot-Google",
-      "Mediapartners-Google"
+      "Mediapartners-Google",
+      "GoogleOther"
     ],
     "ip_ranges": [
       "64.233.160.0/19",
@@ -112,6 +113,306 @@
     "patterns": [
       "Diffbot",
       "DiffbotBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "YandexBot": {
+    "patterns": [
+      "YandexBot",
+      "YandexImages",
+      "YandexFavicons",
+      "YandexMarket",
+      "YandexImageResizer"
+    ],
+    "ip_ranges": [
+      "5.45.192.0/18",
+      "5.255.192.0/18",
+      "37.9.64.0/18",
+      "37.140.128.0/18",
+      "77.88.0.0/18",
+      "84.252.160.0/19",
+      "87.250.224.0/19",
+      "90.156.176.0/20",
+      "92.255.112.0/20",
+      "93.158.128.0/18",
+      "95.108.128.0/17",
+      "141.8.128.0/18",
+      "178.154.128.0/18",
+      "185.32.187.0/24",
+      "213.180.192.0/19",
+      "2a02:6b8::/29"
+    ],
+    "is_llm": false
+  },
+  "UptimeRobot": {
+    "patterns": [
+      "UptimeRobot",
+      "UptimeBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "ClarityBot": {
+    "patterns": [
+      "Clarity-Bot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "CoccocBot": {
+    "patterns": [
+      "coccocbot-image",
+      "coccocbot-web",
+      "imagecoccoc",
+      "image.coccoc",
+      "coccocbot"
+    ],
+    "ip_ranges": [
+      "123.30.175.0/24",
+      "103.131.68.0/22"
+    ],
+    "is_llm": false
+  },
+  "WPFeedbot": {
+    "patterns": [
+      "wp.com feedbot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "OAI_SearchBot": {
+    "patterns": [
+      "OAI-SearchBot",
+      "OAI-SearchBot/1.0",
+      "OAI-SearchBot/1.3"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "MojeekBot": {
+    "patterns": [
+      "MojeekBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "SemrushBot": {
+    "patterns": [
+      "SemrushBot",
+      "SemrushBot/7",
+      "SemrushBot-SI",
+      "SemrushBot-BA",
+      "SEMrushBot"
+    ],
+    "ip_ranges": [
+      "185.191.171.0/24",
+      "85.208.96.0/19"
+    ],
+    "is_llm": false
+  },
+  "AhrefsBot": {
+    "patterns": [
+      "AhrefsBot",
+      "AhrefsSiteAudit"
+    ],
+    "ip_ranges": [
+      "61.16.24.0/22",
+      "168.100.128.0/17",
+      "202.8.40.0/22",
+      "103.150.140.0/23",
+      "202.8.42.0/23",
+      "202.94.84.0/23"
+    ],
+    "is_llm": false
+  },
+  "PinterestBot": {
+    "patterns": [
+      "Pinterestbot",
+      "Pinterest/0.2"
+    ],
+    "ip_ranges": [
+      "54.236.1.0/24"
+    ],
+    "is_llm": false
+  },
+  "SlackBots": {
+    "patterns": [
+      "Slackbot 1.0",
+      "Slackbot-LinkExpanding",
+      "Slack-ImgProxy"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "SeznamBot": {
+    "patterns": [
+      "SeznamBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "AwarioBot": {
+    "patterns": [
+      "AwarioBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "DuckDuckBot": {
+    "patterns": [
+      "DuckDuckBot/1.1",
+      "DuckDuckBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "IbouBot": {
+    "patterns": [
+      "IbouBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "BLEXBot": {
+    "patterns": [
+      "BLEXBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "SEBot": {
+    "patterns": [
+      "SEBot-WA"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "PlagAwareBot": {
+    "patterns": [
+      "PlagAwareBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "LinkupBot": {
+    "patterns": [
+      "LinkupBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "ZenixOpsBot": {
+    "patterns": [
+      "ZenixOpsBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "ShapBot": {
+    "patterns": [
+      "ShapBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "DiscordBot": {
+    "patterns": [
+      "Discordbot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "CompanySpotter": {
+    "patterns": [
+      "companyspotter/2.0.0.0"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "TwitterBot": {
+    "patterns": [
+      "Twitterbot/1.0",
+      "Twitterbot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "SMTBot": {
+    "patterns": [
+      "SMTBot/1.0"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "LinkedInBot": {
+    "patterns": [
+      "LinkedInBot/1.0",
+      "LinkedInBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "AcademicResearchBot": {
+    "patterns": [
+      "AcademicResearchBot"
+    ],
+    "ip_ranges": [],
+    "is_llm": true
+  },
+  "TrendictionBot": {
+    "patterns": [
+      "trendictionbot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "Xbot": {
+    "patterns": [
+      "Xbot/1.0"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "Thinkbot": {
+    "patterns": [
+      "Thinkbot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "SearchAtlasBot": {
+    "patterns": [
+      "SearchAtlas Bot"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "WPBot": {
+    "patterns": [
+      "wpbot/1.3"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "KStandBot": {
+    "patterns": [
+      "KStandBot/1.0"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "Pandalytics": {
+    "patterns": [
+      "Pandalytics/2.0"
+    ],
+    "ip_ranges": [],
+    "is_llm": false
+  },
+  "ZoomBot": {
+    "patterns": [
+      "Zoombot/1.4",
+      "Zoombot"
     ],
     "ip_ranges": [],
     "is_llm": false

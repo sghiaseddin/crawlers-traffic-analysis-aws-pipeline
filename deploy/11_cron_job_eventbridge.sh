@@ -46,7 +46,7 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
   exit 1
 fi
 
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-north-1}}"
 
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_fetch_logs_node"
 RULE_NAME="${PROJECT_PREFIX}_daily_fetch_logs_rule"

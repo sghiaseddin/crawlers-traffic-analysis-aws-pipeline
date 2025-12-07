@@ -1,0 +1,89 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "CloudWatchLogsBasic",
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": "arn:aws:logs:YOUR_REGION:YOUR_ACCOUNT_ID:*"
+      },
+      {
+        "Sid": "S3AccessForPipelineBuckets",
+        "Effect": "Allow",
+        "Action": [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ],
+        "Resource": [
+          "arn:aws:s3:::`project-prefix`-raw-access-logs",
+          "arn:aws:s3:::`project-prefix`-raw-access-logs/*",
+          "arn:aws:s3:::`project-prefix`-processing-logs",
+          "arn:aws:s3:::`project-prefix`-processing-logs/*",
+          "arn:aws:s3:::`project-prefix`-output",
+          "arn:aws:s3:::`project-prefix`-output/*",
+          "arn:aws:s3:::`project-prefix`-ssh-key-bucket",
+          "arn:aws:s3:::`project-prefix`-ssh-key-bucket/*"
+        ]
+      },
+      {
+        "Sid": "SecretsManagerReadConfig",
+        "Effect": "Allow",
+        "Action": [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ],
+        "Resource": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:`project-prefix`-secrets-and-namings-*"
+      },
+      {
+        "Sid": "GlueCrawlerServiceRole",
+        "Effect": "Allow",
+        "Action": [
+          "glue:GetDatabase",
+          "glue:GetDatabases",
+          "glue:GetTable",
+          "glue:GetTables",
+          "glue:CreateTable",
+          "glue:UpdateTable",
+          "glue:DeleteTable",
+          "glue:GetCrawler",
+          "glue:GetCrawlers",
+          "glue:StartCrawler",
+          "glue:UpdateCrawler",
+          "glue:GetPartitions",
+          "glue:CreatePartition",
+          "glue:UpdatePartition",
+          "glue:BatchCreatePartition",
+          "glue:BatchUpdatePartition",
+          "glue:BatchDeletePartition",
+          "glue:GetDataCatalogEncryptionSettings"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Sid": "AllowLambdaInvokeFromViewReport",
+        "Effect": "Allow",
+        "Action": [
+          "lambda:InvokeFunction"
+        ],
+        "Resource": [
+          "arn:aws:lambda:YOUR_REGION:YOUR_ACCOUNT_ID:function:`project-prefix`_lambda_analyze_bots"
+        ]
+      },
+      {
+        "Sid": "AllowLambdaInvokeFromViewReportToGoaccess",
+        "Effect": "Allow",
+        "Action": [
+          "lambda:InvokeFunction"
+        ],
+        "Resource": [
+          "arn:aws:lambda:YOUR_REGION:YOUR_ACCOUNT_ID:function:`project-prefix`_lambda_run_goaccess_arm64"
+        ]
+      }
+    ]
+  }

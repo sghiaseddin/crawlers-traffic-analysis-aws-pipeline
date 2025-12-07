@@ -7,7 +7,7 @@ import subprocess
 import boto3
 from typing import Dict, List, Tuple, Any
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -34,7 +34,7 @@ def lambda_handler(event, context):
     cfg = _get_config()
 
     processing_bucket = cfg["LOG_PROCESSING_BUCKET"]
-    agg_log_key = cfg.get("LOG_AGGREGATED_KEY", "aggregated/all_logs.log")
+    agg_log_key = cfg.get("LOG_AGGREGATED_LOG_KEY", "aggregated/all_logs.log")
 
     output_bucket = cfg["LOG_OUTPUT_BUCKET"]
     # Prefix under which GoAccess HTML reports are stored, e.g. "goaccess" or "reports/goaccess"
@@ -56,7 +56,8 @@ def lambda_handler(event, context):
             except ValueError:
                 target_date = None
     if target_date is None:
-        target_date = (datetime.utcnow().date() - timedelta(days=1)).isoformat()
+        # Default to yesterday (UTC) as a date object
+        target_date = datetime.utcnow().date() - timedelta(days=1)
 
     target_date_str = target_date.isoformat()
 

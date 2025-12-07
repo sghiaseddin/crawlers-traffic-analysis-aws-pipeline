@@ -49,7 +49,7 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
 fi
 
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_analyze_bots"
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-north-1}}"
 ROLE_NAME="${PROJECT_AWS_IAM_ROLE:-LabRole}"
 
 echo "Target AWS Region : ${REGION}"
@@ -127,7 +127,7 @@ if [[ "${get_fn_exit}" -ne 0 ]]; then
     --architectures x86_64 \
     --role "${ROLE_ARN}" \
     --handler analyze_bots.handler \
-    --timeout 60 \
+    --timeout 300 \
     --memory-size 512 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}" \
     --zip-file "fileb://${PACKAGE_FILE}"
@@ -147,7 +147,7 @@ else
     --architectures x86_64 \
     --role "${ROLE_ARN}" \
     --handler analyze_bots.handler \
-    --timeout 60 \
+    --timeout 300 \
     --memory-size 512 \
     --environment "Variables={CONFIG_SECRET_NAME=${CONFIG_SECRET_NAME},PROJECT_PREFIX=${PROJECT_PREFIX},PROJECT_AWS_REGION=${REGION}}"
 

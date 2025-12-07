@@ -55,7 +55,7 @@ if [[ -z "${PROJECT_PREFIX:-}" ]]; then
 fi
 
 LAMBDA_NAME="${PROJECT_PREFIX}_lambda_view_report_node"
-REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+REGION="${PROJECT_AWS_REGION:-${AWS_DEFAULT_REGION:-eu-north-1}}"
 ROLE_NAME="${PROJECT_AWS_IAM_ROLE:-LabRole}"
 
 echo "Target AWS Region : ${REGION}"
@@ -243,6 +243,27 @@ if [[ "${add_perm_exit}" -ne 0 ]]; then
   echo "  -> Permission may already exist or add-permission failed; continuing."
 else
   echo "  -> Public invoke permission added."
+fi
+
+# Also allow classic InvokeFunction for all principals (to satisfy console warning)
+STATEMENT_ID_INVOKE="${PROJECT_PREFIX}-view-report-func-url-invoke"
+
+echo "Adding (or validating) public lambda:InvokeFunction permission..."
+
+set +e
+aws lambda add-permission \
+  --region "${REGION}" \
+  --function-name "${LAMBDA_NAME}" \
+  --statement-id "${STATEMENT_ID_INVOKE}" \
+  --action "lambda:InvokeFunction" \
+  --principal "*" >/dev/null 2>&1
+invoke_perm_exit=$?
+set -e
+
+if [[ "${invoke_perm_exit}" -ne 0 ]]; then
+  echo "  -> InvokeFunction permission may already exist or add-permission failed; continuing."
+else
+  echo "  -> Public lambda:InvokeFunction permission added."
 fi
 
 echo
