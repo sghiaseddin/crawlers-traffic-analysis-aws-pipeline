@@ -1,7 +1,9 @@
 # LLM Bot Traffic Analysis Pipeline
-## Version 1.0.0
+## Version 1.0.1
 
 Serverless AWS solution for detecting and analyzing Large Language Model (LLM) crawlers.
+
+**WE HAVE USED CHAGPT5.1 FOR THE CODING OF THIS PROJECT**
 
 ## Use Case
 
